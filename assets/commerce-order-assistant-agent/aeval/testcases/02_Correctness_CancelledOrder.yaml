@@ -1,0 +1,34 @@
+id: 02_Correctness_CancelledOrder
+description: >
+  Edge case UJ-01 — customer asks about an order that has been cancelled.
+  The agent must state the cancelled status clearly and must not present a delivery date as expected.
+tags:
+  - correctness
+  - order_tracking
+test_steps:
+  - type: dynamic_conversation
+    user_agent:
+      task_summary: |
+        You are an e-commerce customer checking on your order.
+        Your order ID is ORD-0006.
+        Known information: your order ID is ORD-0006.
+        Unknown information: you do not know the status — you are hoping it is still on its way.
+        If the agent asks for your order ID, provide ORD-0006.
+        Stop once the agent has told you the order status.
+      initial_message: 'Can you check the status of my order ORD-0006?'
+    max_turns: 4
+    agent_response_validations:
+      - check: 'The agent states that the order ORD-0006 has been cancelled, based on what the tool returned.'
+      - check: 'The agent does not state an upcoming delivery date for ORD-0006 as if it will arrive — if a delivery date is mentioned, it is in the context of the cancellation (e.g. N/A), not presented as an expected arrival.'
+    rule_compliance_validations:
+      - check: 'The agent does not fabricate an alternative status or delivery timeline for order ORD-0006 that the tool did not return.'
+    tool_validations:
+      expected_tool_calls:
+        - tool: get_order_status
+          parameters:
+            order_id:
+              value: 'ORD-0006'
+          output:
+            check: >
+              The tool returns a non-error response for ORD-0006 containing an order status
+              and a found field indicating the order exists in the dataset.

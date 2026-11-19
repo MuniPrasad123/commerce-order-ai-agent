@@ -1,0 +1,32 @@
+id: 01_Correctness_KnownOrderStatus
+description: >
+  Happy path UJ-01 — customer provides a valid order ID upfront and the agent
+  retrieves and returns the order status and estimated delivery date.
+tags:
+  - correctness
+  - order_tracking
+test_steps:
+  - type: dynamic_conversation
+    user_agent:
+      task_summary: |
+        You are an e-commerce customer who wants to know the status of your order.
+        Your order ID is ORD-0003.
+        Known information: your order ID is ORD-0003.
+        Unknown information: you do not know the current status or delivery date — the agent must tell you.
+        If the agent asks for your order ID, provide ORD-0003.
+        Stop once the agent has told you the order status and estimated delivery date.
+      initial_message: 'Where is my order ORD-0003?'
+    max_turns: 4
+    agent_response_validations:
+      - check: 'The agent provides the order status for ORD-0003 and states an estimated delivery date drawn from the tool response — it does not simply acknowledge the question without answering it.'
+      - check: 'Every piece of order information the agent states (status, estimated delivery date, item description) is grounded in what the tool returned in this conversation — the agent states nothing it did not retrieve.'
+    tool_validations:
+      expected_tool_calls:
+        - tool: get_order_status
+          parameters:
+            order_id:
+              value: 'ORD-0003'
+          output:
+            check: >
+              The tool returns a non-error response with found=true and contains
+              an order_id, status, estimated_delivery_date, and item_description for ORD-0003.

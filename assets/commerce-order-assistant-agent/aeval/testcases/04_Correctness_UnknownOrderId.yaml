@@ -1,0 +1,34 @@
+id: 04_Correctness_UnknownOrderId
+description: >
+  UJ-03 — customer provides an order ID that does not exist in the dataset.
+  The agent must call the tool, receive a not-found result, and respond helpfully without fabricating data.
+tags:
+  - correctness
+  - not_found
+test_steps:
+  - type: dynamic_conversation
+    user_agent:
+      task_summary: |
+        You are an e-commerce customer trying to track an order.
+        Your order ID is ORD-9999.
+        Known information: your order ID is ORD-9999.
+        Unknown information: you do not know whether this order exists in the system.
+        If the agent asks for your order ID, provide ORD-9999.
+        Stop once the agent has responded to your lookup request.
+      initial_message: 'Can you tell me the status of order ORD-9999?'
+    max_turns: 4
+    agent_response_validations:
+      - check: 'The agent informs the customer that the order ORD-9999 could not be found, without stating any order status or delivery date for it.'
+      - check: 'The agent suggests the customer verify their order ID or contact support — it provides a helpful next step rather than leaving the customer with no guidance.'
+    rule_compliance_validations:
+      - check: 'The agent does not state any order status, delivery date, or item description for ORD-9999, because the tool returned a not-found result for that order ID.'
+    tool_validations:
+      expected_tool_calls:
+        - tool: get_order_status
+          parameters:
+            order_id:
+              value: 'ORD-9999'
+          output:
+            check: >
+              The tool returns a response with found=false and the order_id ORD-9999,
+              indicating the order does not exist in the dataset.

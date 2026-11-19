@@ -1,0 +1,38 @@
+id: 07_Memory_MultiTurnOrderContext
+description: >
+  Memory check — verifies the agent retains context across turns in a multi-turn conversation.
+  Customer provides the order ID in a follow-up turn after the agent prompts for it.
+tags:
+  - memory
+  - missing_input
+test_steps:
+  - type: dynamic_conversation
+    user_agent:
+      task_summary: |
+        You are an e-commerce customer asking about your package.
+        You do not mention your order ID in your first message.
+        Your order ID is ORD-0010, but only reveal it after the agent asks.
+        Known information: once asked, your order ID is ORD-0010.
+        Unknown information: you do not know the status or delivery date.
+        When the agent asks for the order ID, respond: 'Yes, it is ORD-0010'.
+        After the agent provides the status and delivery date, ask one more question:
+        'And what item was in that order again?'
+        Stop once the agent answers that final question.
+      initial_message: 'Hey, can you help me find out where my package is?'
+    max_turns: 8
+    agent_response_validations:
+      - check: 'The agent asks the customer for their order ID before looking anything up.'
+      - check: 'After the customer provides ORD-0010, the agent retrieves and states the order status and estimated delivery date from the tool response.'
+      - check: 'When the customer asks what item was in the order, the agent answers with the item description from the tool response already retrieved earlier in the conversation — it does not call the tool a second time unnecessarily or state an item it did not retrieve.'
+    rule_compliance_validations:
+      - check: 'The agent uses the order ID ORD-0010 supplied by the customer in the follow-up turn — it does not assume or invent a different order ID.'
+    tool_validations:
+      expected_tool_calls:
+        - tool: get_order_status
+          parameters:
+            order_id:
+              value: 'ORD-0010'
+          output:
+            check: >
+              The tool returns a non-error response for ORD-0010 with found=true,
+              containing order_id, status, estimated_delivery_date, and item_description.

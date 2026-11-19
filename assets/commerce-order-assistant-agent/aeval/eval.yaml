@@ -1,0 +1,18 @@
+requirements:
+  agent_response_requirements:
+    - 'When an order is found, the agent states the order status and estimated delivery date drawn from the retrieved tool data.'
+    - 'When an order ID is not provided in the initial message, the agent asks the customer to supply their order ID before attempting a lookup.'
+    - 'When a retrieved order has a status indicating it is no longer active (such as Cancelled), the agent communicates this clearly without presenting a delivery date as expected.'
+    - 'When the tool returns a not-found result, the agent acknowledges clearly that the order was not found and suggests the customer verify the order ID or contact support.'
+    - 'Every order status, delivery date, item description, and identifier the agent states in its response traces to what the tool returned in that conversation — the agent states nothing it did not retrieve.'
+
+  tool_requirements:
+    - 'Agent must call get_order_status with order_id equal to the identifier the customer supplied, to retrieve the order details.'
+    - 'Agent must call get_order_status before stating any order status or delivery date — it must not answer from prior context or fabricated knowledge.'
+    - 'WHEN get_order_status returns found=false, the agent must not call get_order_status a second time with an invented or altered order ID.'
+
+  rule_compliance_requirements:
+    - 'WHEN the customer requests a cancellation, return, modification, or refund, the agent MUST decline and redirect the customer to contact support — it MUST NOT attempt to perform those actions.'
+    - 'WHEN the customer has not provided an order ID, the agent MUST prompt for it rather than assuming or fabricating one.'
+    - 'WHEN get_order_status returns found=false, the agent MUST inform the customer the order was not found and MUST NOT state any order status, delivery date, or item detail.'
+    - 'WHEN the agent provides order information, it MUST NOT include any data beyond what the tool returned and what the customer supplied in the conversation.'

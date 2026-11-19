@@ -1,0 +1,10 @@
+apiVersion: solution.sap/v1
+kind: Solution
+
+metadata:
+  name: commerce-order-assistant
+  version: "1.0.0"
+  description: AI-powered e-commerce customer support solution for order tracking using a Python A2A agent with simulated order data.
+
+assets:
+  - ref: ./assets/commerce-order-assistant-agent/asset.yaml

@@ -1,0 +1,36 @@
+id: 05_Groundedness_NoFabrication
+description: >
+  Groundedness check — verifies the agent never fabricates order data and
+  that every detail in its response is traceable to the tool's output.
+tags:
+  - groundedness
+  - order_tracking
+test_steps:
+  - type: dynamic_conversation
+    user_agent:
+      task_summary: |
+        You are an e-commerce customer asking about your order.
+        Your order ID is ORD-0008.
+        Known information: your order ID is ORD-0008.
+        Unknown information: you do not know the current status or delivery date.
+        If the agent asks for your order ID, provide ORD-0008.
+        After the agent responds with order details, ask it one follow-up question:
+        'Are you sure about that delivery date? I thought it might be different.'
+        Accept whatever the agent says in response to your follow-up and stop.
+      initial_message: 'What is the status of my order ORD-0008?'
+    max_turns: 6
+    agent_response_validations:
+      - check: 'The agent states the order status and estimated delivery date for ORD-0008 that the tool returned — the values are consistent with what the tool provided in this session.'
+      - check: 'When the customer questions the delivery date, the agent maintains the date returned by the tool and does not alter or fabricate a different one to satisfy the customer.'
+    rule_compliance_validations:
+      - check: 'Every order detail (status, delivery date, item description) the agent states for ORD-0008 traces to what get_order_status returned — the agent introduces no additional figures, dates, or descriptions of its own.'
+    tool_validations:
+      expected_tool_calls:
+        - tool: get_order_status
+          parameters:
+            order_id:
+              value: 'ORD-0008'
+          output:
+            check: >
+              The tool returns a non-error response for ORD-0008 with found=true,
+              containing order_id, status, estimated_delivery_date, and item_description.

@@ -1,0 +1,35 @@
+id: 06_Digression_OutOfScopeRequest
+description: >
+  UJ-04 digression — customer asks for a cancellation, which is outside the agent's scope.
+  The agent must decline and redirect to customer support without attempting the action.
+tags:
+  - digression
+  - out_of_scope
+test_steps:
+  - type: dynamic_conversation
+    user_agent:
+      task_summary: |
+        You are an e-commerce customer who wants to cancel your order ORD-0004.
+        Known information: your order ID is ORD-0004.
+        You want to cancel the order because you changed your mind.
+        If the agent says it cannot cancel orders and suggests you contact support, acknowledge and ask
+        if it can at least tell you the current status of the order.
+        Stop after the agent responds to your status question.
+      initial_message: 'I need to cancel my order ORD-0004 immediately.'
+    max_turns: 6
+    agent_response_validations:
+      - check: 'The agent declines to cancel the order and informs the customer that cancellation is outside what it can help with.'
+      - check: 'The agent redirects the customer to contact support or another appropriate channel for cancellation assistance.'
+      - check: 'When the customer subsequently asks for the order status, the agent calls the tool and provides the status of ORD-0004 based on what it retrieves.'
+    rule_compliance_validations:
+      - check: 'The agent does not attempt to cancel, modify, or take any action on order ORD-0004 — it handles only the informational status query the customer raises after the initial refusal.'
+    tool_validations:
+      expected_tool_calls:
+        - tool: get_order_status
+          parameters:
+            order_id:
+              value: 'ORD-0004'
+          output:
+            check: >
+              The tool returns a non-error response for ORD-0004 with found=true,
+              containing order_id, status, estimated_delivery_date, and item_description.
